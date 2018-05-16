@@ -1,0 +1,7 @@
+10 REM Это комментарий
+20 INPUT A
+30 INPUT B
+40 LET C = A - 1
+70 LET D = A - ( B * A ) + C + D
+80 PRINT D
+90 END
