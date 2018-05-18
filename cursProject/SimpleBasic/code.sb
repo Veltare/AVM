@@ -1,7 +1,6 @@
-10 REM Это комментарий
-20 INPUT 20
 30 INPUT B
+40 GOTO 80
 70 LET D = ( A + B - C ) / ( A + A * 1 ) + C
-40 GOTO 20
+75 IF C < 0 GOTO 90
 80 PRINT D
-90 END
+90 END 

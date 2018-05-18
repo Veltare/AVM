@@ -119,12 +119,18 @@ int analysisLine(string line)
         elem->name = arrayLine[0];
         if(References.size() > 0)
         {
-            elem->mem_address = to_string(stoi(References[References.size()-1].mem_address)+numericMemory);
-            numericMemory = 1;
+            
+            if(numericMemory == 0)
+                numericMemory+=1;
+            elem->mem_address = to_string(stoi(References[References.size()-1].mem_address,nullptr,10)+numericMemory);
+            cout<<"]]"<<elem->mem_address<<endl;
+            numericMemory = CounterUnresolved(arrayLine);
         }
         else
-            elem->mem_address = "0";
-            numericMemory =  CounterUnresolved(arrayLine);    
+        {
+            elem->mem_address = "0"; 
+        }    
+        numericMemory =  CounterUnresolved(arrayLine);
         References.push_back(*elem);
         for(int i = 0;i < arrayLine.size();i++)
         {
@@ -148,8 +154,9 @@ int analysisLine(string line)
         return 0;
     }
     
-    if(arrayLine.size() >= 3)
-    {        
+    if(arrayLine.size() >= 2)
+    {   
+        cout<< arrayLine[1] <<endl;    
         Command = analysisCommand(arrayLine[1],arrayLine);
         if(Command!="-1")
             GlobalString.push_back(Command);
@@ -185,10 +192,32 @@ string analysisCommand(string line,vector<string> &lineArray)
     
     
     //cout<<"R2"<<endl;
+    cout<<line<<endl;
+    //cout<<(existenceReferences(lineArray[2])==-1)<<endl;
+    ///cout<<lineArray[2]<<endl;  
+
     
-    if(!isValue(lineArray[2]) || isVariable(lineArray[2]))
+    if(line == "END")
+        {  
+            cout<<"TEST"<<endl;
+            cell = to_string(current_step);  
+            command = "HALT";
+            string value = "0";
+            if(existenceReferences(lineArray[0])!=-1)
+            {
+                cell = References[existenceReferences(lineArray[0])].mem_address;
+                string compliteString=cell+" "+command+" "+value;
+                GlobalString.push_back(compliteString);
+                return "-1";
+            }   
+        
+            
+       
+        }  
+
+    if((!isValue(lineArray[2]) || isVariable(lineArray[2])) && existenceReferences(lineArray[2])==-1)
             return "-1";
-    cout<<line<<endl;        
+        
     /*if(existenceVariable(lineArray[2])==-1)
     {
                 
@@ -211,7 +240,7 @@ string analysisCommand(string line,vector<string> &lineArray)
     else    
     if(line == "INPUT") //--> READ
     {
-        cell = to_string(current_step);
+        cell = References[existenceReferences(lineArray[0])].mem_address;
        
         if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
@@ -241,7 +270,7 @@ string analysisCommand(string line,vector<string> &lineArray)
     else    
     if(line == "PRINT")//--> WRITE
        {
-        cell = to_string(current_step);   
+        cell = References[existenceReferences(lineArray[0])].mem_address;  
         if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
             
@@ -288,13 +317,15 @@ string analysisCommand(string line,vector<string> &lineArray)
     else  
     if(line == "GOTO")
         {
-             
-            cell = to_string(current_step);  
+ 
+            cell = to_string(current_step);
+              
             command = "JUMP";
             if(existenceVariable(lineArray[2])!=-1 )
                 {
 
                     value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
+                     
                     compliteString=cell+" "+command+" "+value;
                     current_step++;
                     return compliteString; 
@@ -302,8 +333,9 @@ string analysisCommand(string line,vector<string> &lineArray)
                 else
                     if(existenceReferences(lineArray[0])!=-1 && existenceReferences(lineArray[2])!=-1)
                     {
-                        cell = References[existenceReferences(lineArray[2])].mem_address;
-                        value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
+                        cell = References[existenceReferences(lineArray[0])].mem_address;
+                        value =  References[existenceReferences(lineArray[2])].mem_address;
+                        
                         compliteString=cell+" "+command+" "+value;
                         
                         current_step++;
@@ -320,7 +352,7 @@ string analysisCommand(string line,vector<string> &lineArray)
             command = "LOAD";
             if(existenceVariable(lineArray[2])!=-1)
                 {
-                    cell = to_string(current_step);
+                   cell = References[existenceReferences(lineArray[0])].mem_address;
                     value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
                     compliteString=cell+" "+command+" "+value;
                     GlobalString.push_back(compliteString);
@@ -328,7 +360,7 @@ string analysisCommand(string line,vector<string> &lineArray)
                     
                     if(lineArray[5] == "GOTO" && existenceReferences(lineArray[6])!=-1)
                     {
-                       
+                        
                         cell = to_string(current_step);
                         value = References[existenceReferences(lineArray[6])].mem_address;
                         command = "JNEG";
@@ -344,23 +376,7 @@ string analysisCommand(string line,vector<string> &lineArray)
                    return "-1";
                 }
         }
-        else
-        if(line == "END")
-        {  
-            cell = to_string(current_step);  
-            command = "HALT";
-            string value = "0";
-            if(existenceReferences(lineArray[0])!=-1)
-            {
-                string cell = References[existenceReferences(lineArray[0])].mem_address;
-                string compliteString=cell+" "+command+" "+value;
-                GlobalString.push_back(compliteString);
-                return "-1";
-            }   
         
-            
-       
-        }  
       return "-1";       
 }
 
@@ -644,6 +660,7 @@ void SolutionUnresolved()
     for(int i = 0;i < References.size();i++)
     {
         References[i].mem_address = to_string(i);
+        cout<<"]]"<<References[i].mem_address<<endl;
     }
     
 }
@@ -654,7 +671,7 @@ void SolutionVariable()
     for(int i = cell;i > SIZE - GlobalVariable.size()-1;i--)
     {
         GlobalVariable[k].mem_address = to_string(i);
-        cout<<GlobalVariable[k].mem_address<<endl;
+        //cout<<GlobalVariable[k].mem_address<<endl;
         k++;
     }
     
@@ -664,17 +681,34 @@ int CounterUnresolved(vector<string> line)
     int counter(0);
     for(int i = 0;i < line.size();i++)
     {
-        if(IsOperation(line[i]) && line[i].compare("=") != 0)
+               //cout<<line[i]<<"-> "; 
+              // cout<<IsOperation(line[i]);
+    }
+              //  cout<<endl; 
+    for(int i = 0;i < line.size();i++)
+    {
+       
+        if(IsOperation(line[i]) && line[i].compare("=") < 0)
         {
+           //cout<<"ZAHOD"<<endl; 
            counter+=3;
            continue;     
         }
         else
-        if(IsOperation(line[i]) && line[i].compare("=")== 0)
+        if(IsOperation(line[i]) && line[i].compare("=") == 0)
+        {
+            //cout<<"ZAHOD2"<<endl; 
+            counter+=2;
+            continue;
+        }
+        if(line[i].compare("IF") == 0)
         {
             counter+=2;
             continue;
         }
-       return counter;
+
+       
     }
+    cout<<"C: "<<counter<<endl;
+    return counter;
 }
