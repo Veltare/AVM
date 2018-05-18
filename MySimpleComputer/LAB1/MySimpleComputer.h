@@ -32,8 +32,8 @@ using namespace std;
 
 
 #define SIZE 100
-extern int reg;
-extern MemoryArray[SIZE];
+int reg;
+int MemoryArray[SIZE];
 //Функции статической библеотеки
  
 int sc_memoryInit();/*– инициализирует оперативную память Simple Computer, за-

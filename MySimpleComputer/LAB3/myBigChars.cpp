@@ -11,17 +11,19 @@ int main()
 {
   int big[2];
   int count(0);
-  big[0] = 201524223;
-  big[1] = 4290822960;
-  for(int i = 0;i<10;i++)
+  big[0] = 3234070272;
+  big[1] = 3233857788;
+  for(int i = 0;i<16;i++)
   {
    bc_bigcharread(i,big,1,&count);
     //bc_printbigchar(big,10,10,BLUE,WHITE);
-   bc_bigcharwrite((char*)"NUM",big,i);
-   //bc_bigcharwrite(2,big,1);
+   bc_bigcharwrite((char*)"NUM2",big,i);
+   
 
   }
-
+  bc_bigcharwrite(15,big,1);
+  //bc_printbigchar(big,10,10,BLUE,WHITE);
+  //bc_bigcharwrite((char*)"NUM",big,i);
 
   return 0;
 }

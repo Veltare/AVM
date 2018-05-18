@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <sys/time.h>
+#include <iomanip> 
 
 #include "../LAB1/MySimpleComputer.h"
 #include "../LAB2/myTerm.h"
@@ -14,6 +15,10 @@
 
 
 using namespace std;
+
+ios_base::fmtflags oldFlags = cout.flags();
+    streamsize         oldPrec  = cout.precision();
+    char               oldFill  = cout.fill();
 
 struct itimerval nval, oval;
 
@@ -28,6 +33,8 @@ void IOT(int *value,int command,int operand);
 void PrintC(int value);
 void CU();
 int ALU(int command,int operand);
+void PrintCell(int value);
+
 int IncCounter(0);
 int Accumulator(0);
 int Operation(0);
@@ -191,22 +198,67 @@ void PrintFlag()
 }
 void PrintBigNumber(int value,int x,int y,enum colors fg,enum colors bg)
 {
+    int command(0),operand(0);
     int *array = new int[2];
     mt_setbgcolor(DEFAULT);
     int count;
 
         bc_bigcharread(10,array,1,&count);
         bc_printbigchar(array,x,y,fg,bg);
-    
-        bc_bigcharread((char*)"NUM",array,(int)value/1000,&count);
-        bc_printbigchar(array,x+9,y,fg,bg);
-        bc_bigcharread((char*)"NUM",array,(int)(value/100)%10,&count);
-        bc_printbigchar(array,x+18,y,fg,bg);
-        bc_bigcharread((char*)"NUM",array,(int)(value%100)/10,&count);
-        bc_printbigchar(array,x+27,y,fg,bg);
-        bc_bigcharread((char*)"NUM",array,(int)value%10,&count);
-        bc_printbigchar(array,x+36,y,fg,bg);
-    
+        
+        sc_commandDecode(value,&command,&operand);
+        if(command > 15)
+        {
+             if(operand < 15)
+             {
+                    bc_bigcharread((char*)"NUM2",array,(int)command/16,&count);
+                    bc_printbigchar(array,x+9,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)command%16,&count);
+                    bc_printbigchar(array,x+18,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_printbigchar(array,x+27,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand,&count);
+                    bc_printbigchar(array,x+36,y,fg,bg);
+             }
+             else
+             {
+                    bc_bigcharread((char*)"NUM2",array,(int)command/16,&count);
+                    bc_printbigchar(array,x+9,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)command%16,&count);
+                    bc_printbigchar(array,x+18,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand/16,&count);
+                    bc_printbigchar(array,x+27,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand%16,&count);
+                    bc_printbigchar(array,x+36,y,fg,bg);
+             }
+       
+        }
+        else
+        {
+            if(operand < 15)
+             {
+                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_printbigchar(array,x+9,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)command,&count);
+                    bc_printbigchar(array,x+18,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_printbigchar(array,x+27,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand,&count);
+                    bc_printbigchar(array,x+36,y,fg,bg);
+             }
+             else
+             {
+                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_printbigchar(array,x+9,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)command,&count);
+                    bc_printbigchar(array,x+18,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand/16,&count);
+                    bc_printbigchar(array,x+27,y,fg,bg);
+                    bc_bigcharread((char*)"NUM2",array,(int)operand%16,&count);
+                    bc_printbigchar(array,x+36,y,fg,bg);
+             }
+       
+        }
 }
 void Control()
 {
@@ -470,12 +522,12 @@ void PrintMemory(int z,int k,bool enter_mode)
                 }
                  
                 mt_gotoXY(x1,y1);
-                PrintC(MemoryArray[i]);
+                PrintCell(MemoryArray[i]);
                 x1+=6;
                 count++;
                  
                 mt_setbgcolor(DEFAULT);
-                // PrintInterface();        
+                     
             }
     
     }
@@ -527,7 +579,8 @@ void PrintC(int value)
                
                 if(value < 0)  
                 {
-                    buffer = value/1000;
+                    cout<<dec;
+                    buffer = value/100;
                     cout<<"+"<<(int)(-1)*buffer;
                     buffer = (value/100)%10;
                     cout<<(int)(-1)*buffer;
@@ -538,6 +591,7 @@ void PrintC(int value)
                 }
                 else
                 {
+                    cout<<dec;
                     buffer = value/1000;
                     cout<<"+"<<(int)buffer;
                     buffer = (value/100)%10;
@@ -547,6 +601,28 @@ void PrintC(int value)
                     buffer = (value%10);
                     cout<<(int)buffer;
                 }
+}
+void PrintCell(int value)
+{
+    
+    int command(0),operand(0);
+    sc_commandDecode(value,&command,&operand);
+    if(command > 0x0F)
+    {   
+        if(operand > 0x0F)
+            cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(2)<<command<<operand;
+        else
+            cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(1)<<command<<setw(2)<<operand;    
+    }
+    else
+    if(command < 0x0F)
+    {
+         if(operand > 0x0F)
+            cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(2)<<command<<setw(1)<<operand; 
+        else
+            cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(2)<<command<<setw(2)<<operand;    
+    }
+           
 }
 void CU()
 {
