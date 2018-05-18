@@ -1,6 +1,7 @@
 10 REM Это комментарий
-20 INPUT A
+20 INPUT 20
 30 INPUT B
-70 LET D = ( A + B - C ) / ( A + A * B ) + C
+70 LET D = ( A + B - C ) / ( A + A * 1 ) + C
+40 GOTO 20
 80 PRINT D
 90 END

@@ -13,7 +13,8 @@
 
 
 using namespace std;
-
+const int SIZE = 100;
+int current_step(0);
 bool IsFirst = true;
 bool PriorityOperation = true;
 struct Variable
@@ -22,9 +23,16 @@ struct Variable
     string mem_address;
     int value;
 };
-int numericMemory(0);
+struct UnresolvedReferences
+{
+    string name;
+    string mem_address;
+};
+int numericMemory(1);
+
 vector<Variable> GlobalVariable;
 vector<string> GlobalString;
+vector<UnresolvedReferences>References;
 
 int analysisLine(string line);
 string analysisCommand(string line,vector<string> &lineArray);
@@ -37,7 +45,11 @@ vector<string> ReverseRecordingCreation(vector<string> line);
 int OperationPriority(string operation);
 bool IsOperation(string operation);
 void ResolutionProcess(vector<string> lineA,string &value,string&command);
-
+bool isVariable(string value);
+void SolutionUnresolved();
+int existenceReferences(string A);
+void SolutionVariable();
+int CounterUnresolved(vector<string> line);
 main(int argc, char* argv[])
 {
 
@@ -71,6 +83,16 @@ if(fin.good())
             
             analysisLine(line);
         }
+        fin.clear();
+        IsFirst = false;
+        //SolutionUnresolved();
+        SolutionVariable();
+        fin.seekg(0);
+        while(getline(fin,line))
+        {
+            
+            analysisLine(line);
+        }
     }
 if(out.good())
 {
@@ -87,21 +109,45 @@ return 0;
 int analysisLine(string line)
 {
     string Command;
-   
-    
+
     vector<string> arrayLine;
     arrayLine = stringSplit(line);
-    if(arrayLine[1] == "END")
-    {  
-         Command = "HALT";
-        string value = "0";   
-        string cell = to_string(numericMemory);
-        string compliteString=cell+" "+Command+" "+value;
-        GlobalString.push_back(compliteString);
-        numericMemory++;
-            
-       
-    }  
+    if(IsFirst)
+    {
+        
+        UnresolvedReferences *elem = new UnresolvedReferences;
+        elem->name = arrayLine[0];
+        if(References.size() > 0)
+        {
+            elem->mem_address = to_string(stoi(References[References.size()-1].mem_address)+numericMemory);
+            numericMemory = 1;
+        }
+        else
+            elem->mem_address = "0";
+            numericMemory =  CounterUnresolved(arrayLine);    
+        References.push_back(*elem);
+        for(int i = 0;i < arrayLine.size();i++)
+        {
+            if((existenceVariable(arrayLine[i])==-1))
+               {
+                  if(isValue(arrayLine[i])==true || isVariable(arrayLine[i]))
+                  {
+                    Variable *temp = new Variable;
+                    temp->value = 0;
+                    temp->name = arrayLine[i];
+                    GlobalVariable.push_back(*temp);
+                    
+                  }
+                  else
+                  {
+                      
+                  }
+               
+               }
+        }    
+        return 0;
+    }
+    
     if(arrayLine.size() >= 3)
     {        
         Command = analysisCommand(arrayLine[1],arrayLine);
@@ -131,17 +177,18 @@ vector<string>stringSplit(string line)
 string analysisCommand(string line,vector<string> &lineArray)
 {
     string compliteString;
-    
+    string cell;
     string command;
-    string operand;
-    string value = to_string(numericMemory+1);
-    string cell = to_string(numericMemory);
+    string value;
+    
+    
     
     
     //cout<<"R2"<<endl;
     
-    if(!isValue(lineArray[2]))
+    if(!isValue(lineArray[2]) || isVariable(lineArray[2]))
             return "-1";
+    cout<<line<<endl;        
     /*if(existenceVariable(lineArray[2])==-1)
     {
                 
@@ -156,34 +203,7 @@ string analysisCommand(string line,vector<string> &lineArray)
             
     }*/
     
-    for(int i = 0;i < lineArray.size();i++)
-        {
-            if((existenceVariable(lineArray[i])==-1))
-               {
-                  if(isValue(lineArray[i])==true)
-                  {
-                    Variable *temp = new Variable;
-                   
-                    
-                    cell = to_string(numericMemory);
-                    numericMemory++;
-                   
-                    temp->mem_address = cell;
-                   
-                    temp->value = 0;
-                    operand = lineArray[i];
-                    temp->name = operand;
-                    GlobalVariable.push_back(*temp);
-                    
-                    value = "0";
-                  }
-                  else
-                  {
-                      
-                  }
-               
-               }
-        }    
+   
     if(line == "REM")
     {
       return "-1"; 
@@ -191,42 +211,58 @@ string analysisCommand(string line,vector<string> &lineArray)
     else    
     if(line == "INPUT") //--> READ
     {
-        
-        
-        if(existenceVariable(lineArray[2])!=-1)
+        cell = to_string(current_step);
+       
+        if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
             
             
-            operand = lineArray[2];
+            
             command = "READ";
             value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
             
         }
         else
-            command = "READ";
+         {
+             if(isVariable(lineArray[2]))
+             {
+                 command = "READ";
+                 value = lineArray[2];
+             }
 
+
+         }   
         compliteString=cell+" "+command+" "+value;
-        //numericMemory++;
-    
+        current_step++;
+
         return compliteString;      
     }
         
     else    
     if(line == "PRINT")//--> WRITE
        {
-        if(existenceVariable(lineArray[2])!=-1)
+        cell = to_string(current_step);   
+        if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
             
             
-            operand = lineArray[2];
+            
             command = "WRITE";
             value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
         }
         else
-           command = "WRITE"; 
+         {
+             if(isVariable(lineArray[2]))
+             {
+                 command = "WRITE";
+                 value = lineArray[2];
+             }
+
+
+         }   
 
         compliteString=cell+" "+command+" "+value;
-        numericMemory++;
+        current_step++;
    
         return compliteString;    
        }
@@ -246,25 +282,33 @@ string analysisCommand(string line,vector<string> &lineArray)
              }
              cout<<endl;
              ResolutionProcess(T,value,command);   
-                 return "-1";
+            return "-1";
         }
                 
     else  
     if(line == "GOTO")
         {
              
-            cout<<"ZAHOD3"<<endl;
+            cell = to_string(current_step);  
             command = "JUMP";
-            if(existenceVariable(lineArray[2])!=-1)
+            if(existenceVariable(lineArray[2])!=-1 )
                 {
 
-                    operand = lineArray[2];
                     value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
                     compliteString=cell+" "+command+" "+value;
-                    numericMemory++;
-   
+                    current_step++;
                     return compliteString; 
                 }
+                else
+                    if(existenceReferences(lineArray[0])!=-1 && existenceReferences(lineArray[2])!=-1)
+                    {
+                        cell = References[existenceReferences(lineArray[2])].mem_address;
+                        value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
+                        compliteString=cell+" "+command+" "+value;
+                        
+                        current_step++;
+                        return compliteString; 
+                    }    
               
             
         }
@@ -276,41 +320,47 @@ string analysisCommand(string line,vector<string> &lineArray)
             command = "LOAD";
             if(existenceVariable(lineArray[2])!=-1)
                 {
+                    cell = to_string(current_step);
                     value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
                     compliteString=cell+" "+command+" "+value;
                     GlobalString.push_back(compliteString);
-                    numericMemory++;
-                    operand = lineArray[2];
-                    if(lineArray[5] == "GOTO")
+                    current_step++;
+                    
+                    if(lineArray[5] == "GOTO" && existenceReferences(lineArray[6])!=-1)
                     {
                        
-                        cell = to_string(numericMemory);
-                        value = to_string(stoi( lineArray[6],nullptr,10)/10);
-                        command = "JNEG";    
+                        cell = to_string(current_step);
+                        value = References[existenceReferences(lineArray[6])].mem_address;
+                        command = "JNEG";
+                        current_step++;    
                     }
+                    else
+                        return "-1";
                     compliteString=cell+" "+command+" "+value;
-                    numericMemory++;
                     return compliteString; 
                 }
                 else
                 {
-                    
-                    compliteString=cell+" "+command+" "+value;
-                    
-                    GlobalString.push_back(compliteString);
-                    numericMemory++;
-                    if(lineArray[5] == "GOTO")
-                    {
-                        
-                        cell = to_string(numericMemory);
-                        value = to_string(stoi( lineArray[6],nullptr,10)/10);
-                        command = "JNEG";    
-                    }
-                    compliteString=cell+" "+command+" "+value;
-                    numericMemory++;
-                    return compliteString; 
+                   return "-1";
                 }
         }
+        else
+        if(line == "END")
+        {  
+            cell = to_string(current_step);  
+            command = "HALT";
+            string value = "0";
+            if(existenceReferences(lineArray[0])!=-1)
+            {
+                string cell = References[existenceReferences(lineArray[0])].mem_address;
+                string compliteString=cell+" "+command+" "+value;
+                GlobalString.push_back(compliteString);
+                return "-1";
+            }   
+        
+            
+       
+        }  
       return "-1";       
 }
 
@@ -324,12 +374,34 @@ bool isValue(string value)
     else
         return false;    
 }
-
+bool isVariable(string value)
+{
+    locale loc;
+    if(value.size()>1)
+        return false;
+    for(int i = 0;i<value.size();i++)
+        {
+            if(!isdigit(value[i],loc))
+                return false;
+        }
+    if(isdigit(value[0],loc))
+        return true;
+     
+}
 int existenceVariable(string A)
 {
     for(int i = 0;i<GlobalVariable.size();i++)
     {
         if(GlobalVariable[i].name == A)
+            return i;
+    }
+   return -1;
+}
+int existenceReferences(string A)
+{
+    for(int i = 0;i<References.size();i++)
+    {
+        if(References[i].name == A)
             return i;
     }
    return -1;
@@ -345,27 +417,27 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
     {
         command = "LOAD";
         value =  V1.mem_address;
-        cell = to_string(numericMemory);
+        cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
-        numericMemory++;
-        IsFirst = false;    
+        current_step++;
+       
         command = "STORE";
         value =  V2.mem_address;
-        cell = to_string(numericMemory);
+        cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
-        numericMemory++;
+        current_step++;
     return 0;
     
     }
         command = "LOAD";
         value =  V1.mem_address;
-        cell = to_string(numericMemory);
+        cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
-        numericMemory++;
-        IsFirst = false;
+        current_step++;
+        
     
   
     if(operation == "-")
@@ -373,20 +445,20 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
     
     command = "SUB";
     value =  V2.mem_address;
-    cell = to_string(numericMemory);
+    cell = to_string(current_step);
     compliteString=cell+" "+command+" "+value;
     GlobalString.push_back(compliteString);
-    numericMemory++;
+    current_step++;
   
     }
     if(operation == "+")
     {
     command = "ADD";
     value =  V2.mem_address;
-    cell = to_string(numericMemory);
+    cell = to_string(current_step);
     compliteString=cell+" "+command+" "+value;
     GlobalString.push_back(compliteString);
-    numericMemory++;
+    current_step++;
     
     
     }
@@ -394,10 +466,10 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
     {
     command = "MUL";
     value =  V2.mem_address;
-    cell = to_string(numericMemory);
+    cell = to_string(current_step);
     compliteString=cell+" "+command+" "+value;
     GlobalString.push_back(compliteString);
-    numericMemory++;
+    current_step++;
    
     }
     if(operation == "/")
@@ -405,21 +477,22 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
   
     command = "DIVIDE";
     value =  V2.mem_address;
-    cell = to_string(numericMemory);
+    cell = to_string(current_step);
     compliteString=cell+" "+command+" "+value;
     GlobalString.push_back(compliteString);
-    numericMemory++;
+    current_step++;
    
     
     }
     
     if(PriorityOperation == true)
     {
-         
-                   
+        
+        int buffer = stoi(GlobalVariable[GlobalVariable.size()-1].mem_address,nullptr,10);           
         Variable *temp = new Variable;
-        cell = to_string(numericMemory);
-        numericMemory++;
+        
+        cell = to_string(buffer-1);
+        //current_step++;
                    
         temp->mem_address = cell;
                    
@@ -430,12 +503,12 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
          
         command = "STORE";
         value =  temp->mem_address;
-        cell = to_string(numericMemory);
+        cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
-        numericMemory++;
+        current_step++;
         PriorityOperation = true;
-        IsFirst = true;
+        
     }
     return 0;
 }
@@ -565,4 +638,43 @@ void ResolutionProcess(vector<string> lineA,string &value,string&command)
          }
     }
     
+}
+void SolutionUnresolved()
+{
+    for(int i = 0;i < References.size();i++)
+    {
+        References[i].mem_address = to_string(i);
+    }
+    
+}
+void SolutionVariable()
+{
+    int cell = SIZE - 1;
+    int k = 0;
+    for(int i = cell;i > SIZE - GlobalVariable.size()-1;i--)
+    {
+        GlobalVariable[k].mem_address = to_string(i);
+        cout<<GlobalVariable[k].mem_address<<endl;
+        k++;
+    }
+    
+}
+int CounterUnresolved(vector<string> line)
+{
+    int counter(0);
+    for(int i = 0;i < line.size();i++)
+    {
+        if(IsOperation(line[i]) && line[i].compare("=") != 0)
+        {
+           counter+=3;
+           continue;     
+        }
+        else
+        if(IsOperation(line[i]) && line[i].compare("=")== 0)
+        {
+            counter+=2;
+            continue;
+        }
+       return counter;
+    }
 }
