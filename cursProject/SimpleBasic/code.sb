@@ -1,6 +1,9 @@
-30 INPUT B
-40 GOTO 80
-70 LET D = ( A + B - C ) / ( A + A * 1 ) + C
-75 IF C < 0 GOTO 90
-80 PRINT D
+10 INPUT A
+20 LET B = A
+30 LET C = -1 * ( A - 1 ) 
+40 LET B = B * ( A - 1 )
+50 LET A = A - 1
+60 LET C = C + 1
+70 IF C < 0 GOTO 40
+80 PRINT B
 90 END 

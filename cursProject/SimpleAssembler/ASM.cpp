@@ -53,6 +53,7 @@ int analysisLine(string line)
     int command(0);
     int argument(0);
     int code(0);
+    
     string Comment;
     string SymbolComment = ";";
  
@@ -60,20 +61,25 @@ int analysisLine(string line)
     arrayLine = stringSplit(line);
     if(arrayLine.size() >= 3)
     {
+       
         cell = stoi( arrayLine[0],nullptr,10);
-        argument = stoi( arrayLine[2],nullptr,16);
+        argument = stoi( arrayLine[2],nullptr,10);
         if(cell < 0x00 || cell > 0x63)
             return -1;
         analysisOperation(arrayLine);
+         
         if(analysisCommand(arrayLine[1],command)==-1)
             return -1;
 
         
          if(argument < 0x00 || argument > 0x270F)
             return -1;    
+         
         Comment = analysisComment(arrayLine,SymbolComment);
+        //cout<<command<<"-"<<argument<<endl;
         if(sc_commandEncode(command,argument,&code))
         {
+            //cout<<code<<endl;
             sc_memorySet(cell,code);
              //MemoryArray[cell] = code;
         }
@@ -138,6 +144,9 @@ int analysisCommand(string line,int &command)
     if(line == "RCCR")
         command = 0x46;
     else
+    if(line == "=")
+        command = 0;
+    else    
     return -1;
 
     return 0;          

@@ -354,6 +354,7 @@ void Control()
             }
             case L:
             {
+                cout<<"ROBIT"<<endl;
                 sc_memoryLoad((char*)"memory.o");
                 mt_clrscr();
                 PrintInterface();
@@ -584,7 +585,7 @@ void CU()
 
             if(str.size()>5)
             {
-                 cout<<"ORY1"<<endl;
+                
                 sc_regSet(P,1);
                 break;
             }
@@ -652,9 +653,9 @@ void CU()
                  return;
              }
                 
-             x = (int)2 + (operand%10*6);
-             y = (int)2 + (operand/10);
-             IncCounter = operand;   
+             x = (int)2 + (operand-1%10*6);
+             y = (int)2 + (operand-1/10);
+             IncCounter = operand-1;   
              mt_clrscr();
              PrintMemory(x,y,false);
              PrintInterface();
@@ -734,7 +735,7 @@ int ALU(int command,int operand)
             if((Accumulator + buffer)>10000)
             {
                 sc_regSet(P,1);
-                cout<<"ORY3"<<endl;
+                
                 break;
             }
                 
@@ -750,7 +751,7 @@ int ALU(int command,int operand)
             if((Accumulator - buffer)>10000)
             {
                 sc_regSet(P,1);
-                cout<<"ORY2"<<endl;
+                
                 break;
             }
                 
@@ -782,11 +783,11 @@ int ALU(int command,int operand)
             int buffer(0);
             sc_memoryGet(operand,&value);
             sc_commandDecode(value,&value,&buffer);
-            cout<<"YMNOG"<<endl;
+            
              if((Accumulator * buffer)>10000)
             {
                 sc_regSet(P,1);
-                cout<<"ORY1"<<endl;
+               
                 break;
             }    
             Accumulator = (int)(Accumulator * buffer);    
@@ -806,7 +807,7 @@ int ALU(int command,int operand)
     if ((Accumulator > 0x7FFF)) {
         
 		Accumulator = 9999;
-         cout<<"ORY1"<<endl;
+         
 		sc_regSet(P, 1);
 	}
 	else

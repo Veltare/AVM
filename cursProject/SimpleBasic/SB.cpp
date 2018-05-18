@@ -50,6 +50,7 @@ void SolutionUnresolved();
 int existenceReferences(string A);
 void SolutionVariable();
 int CounterUnresolved(vector<string> line);
+bool IsCommand(string line);
 main(int argc, char* argv[])
 {
 
@@ -132,14 +133,19 @@ int analysisLine(string line)
         }    
         numericMemory =  CounterUnresolved(arrayLine);
         References.push_back(*elem);
-        for(int i = 0;i < arrayLine.size();i++)
+        for(int i = 1;i < arrayLine.size();i++)
         {
+             cout<<"||"<<arrayLine[i]<<endl;
+             cout<<(isVariable(arrayLine[i]))<<endl;
+            if(IsCommand(arrayLine[i]))
+                break;
             if((existenceVariable(arrayLine[i])==-1))
                {
                   if(isValue(arrayLine[i])==true || isVariable(arrayLine[i]))
                   {
                     Variable *temp = new Variable;
                     temp->value = 0;
+                   
                     temp->name = arrayLine[i];
                     GlobalVariable.push_back(*temp);
                     
@@ -393,10 +399,16 @@ bool isValue(string value)
 bool isVariable(string value)
 {
     locale loc;
-    if(value.size()>1)
+    //char deg = "-";
+    if(IsOperation(value))
+        return false;
+    if(value.size()>4)
         return false;
     for(int i = 0;i<value.size();i++)
         {
+            
+            if(value[i] == '-')
+                continue;
             if(!isdigit(value[i],loc))
                 return false;
         }
@@ -432,14 +444,14 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
     if(operation == "=")
     {
         command = "LOAD";
-        value =  V1.mem_address;
+        value =  V2.mem_address;
         cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
         current_step++;
        
         command = "STORE";
-        value =  V2.mem_address;
+        value =  V1.mem_address;
         cell = to_string(current_step);
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
@@ -671,6 +683,13 @@ void SolutionVariable()
     for(int i = cell;i > SIZE - GlobalVariable.size()-1;i--)
     {
         GlobalVariable[k].mem_address = to_string(i);
+        if(isVariable(GlobalVariable[k].name))
+        {
+            string compliteString;        
+            compliteString=GlobalVariable[k].mem_address+" "+"="+" "+GlobalVariable[k].name;
+            GlobalString.push_back(compliteString);
+        }
+        
         //cout<<GlobalVariable[k].mem_address<<endl;
         k++;
     }
@@ -711,4 +730,11 @@ int CounterUnresolved(vector<string> line)
     }
     cout<<"C: "<<counter<<endl;
     return counter;
+}
+bool IsCommand(string line)
+{
+ if(line == "IF" || line == "GOTO" || line == "REM" || line == "END" || line == "INPUT" || line == "WRITE" || line == "PRINT")
+    return true;
+ else   
+ return false;   
 }
