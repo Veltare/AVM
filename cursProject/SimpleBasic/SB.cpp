@@ -1,3 +1,4 @@
+//Курсовая работа по ЭВМ,Транслятор Simple Basic
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -7,16 +8,8 @@
 #include <sstream>
 #include <locale>  
 
-//#include ".../MySimpleComputer/LAB1/MySimpleComputer.h"
-//#include "./ASM.h"
-
-
-
 using namespace std;
-const int SIZE = 100;
-int current_step(0);
-bool IsFirst = true;
-bool PriorityOperation = true;
+
 struct Variable
 {
     string name;
@@ -28,55 +21,61 @@ struct UnresolvedReferences
     string name;
     string mem_address;
 };
-int numericMemory(1);
+
+int analysisLine(string line);
+int existenceVariable(string A);
+int FindVariable(string A);
+int OperationProcess(string operation,int index1,int index2,int index3,string cell,string &value,string&command);
+int existenceReferences(string A);
+int OperationPriority(string operation);
+int CounterUnresolved(vector<string> line);
+
+void SolutionVariable();
+void ResolutionProcess(vector<string> lineA,string &value,string&command);
+
+bool IsOperation(string operation);
+bool IsCommand(string line);
+bool isValue(string value);
+bool isVariable(string value);
+
+string analysisCommand(string line,vector<string> &lineArray);
+vector<string>stringSplit(string line);
+vector<string> ReverseRecordingCreation(vector<string> line);
 
 vector<Variable> GlobalVariable;
 vector<string> GlobalString;
 vector<UnresolvedReferences>References;
 
-int analysisLine(string line);
-string analysisCommand(string line,vector<string> &lineArray);
-bool isValue(string value);
-vector<string>stringSplit(string line);
-int existenceVariable(string A);
-int FindVariable(string A);
-int OperationProcess(string operation,int index1,int index2,int index3,string cell,string &value,string&command);
-vector<string> ReverseRecordingCreation(vector<string> line);
-int OperationPriority(string operation);
-bool IsOperation(string operation);
-void ResolutionProcess(vector<string> lineA,string &value,string&command);
-bool isVariable(string value);
-void SolutionUnresolved();
-int existenceReferences(string A);
-void SolutionVariable();
-int CounterUnresolved(vector<string> line);
-bool IsCommand(string line);
+const int SIZE = 100;
+int current_step(0);
+int numericMemory(1);
+bool IsFirst = true;
+
 main(int argc, char* argv[])
 {
 
-ifstream fin;
-ofstream out;
-int temp;
-string line;
+    ifstream fin;
+    ofstream out;
+    string line;
 
-if(argc !=3)
+    if(argc !=3)
     {
-        cerr<<"Ошибка!Неверное количество аргументов!"<<endl;
-        exit(1);
+            cerr<<"Ошибка!Неверное количество аргументов!"<<endl;
+            exit(1);
     }
  
-if ((strcmp(argv[1], ".sb") == 0) || (strcmp(argv[2], ".sa") == 0))
-		{
+    if((strcmp(argv[1], ".sb") == 0) || (strcmp(argv[2], ".sa") == 0))
+	{
             cout<<argv[1]<<endl;
             cout<<argv[2]<<endl;
             cerr<<"Ошибка!Неверный название или путь к файлам!"<<endl;
             exit(1);
-        }  
+    }  
        
     fin.open(argv[1],ifstream::in);
     out.open(argv[2],ofstream::out);
    
-if(fin.good())
+    if(fin.good())
     {
        
         while(getline(fin,line))
@@ -86,7 +85,7 @@ if(fin.good())
         }
         fin.clear();
         IsFirst = false;
-        //SolutionUnresolved();
+
         SolutionVariable();
         fin.seekg(0);
         while(getline(fin,line))
@@ -95,16 +94,16 @@ if(fin.good())
             analysisLine(line);
         }
     }
-if(out.good())
-{
-    for(int i=0;i<GlobalString.size();i++)
+    if(out.good())
     {
-        cout<<GlobalString[i]<<endl;
-		out << GlobalString[i] <<endl;
+        for(int i=0;i<GlobalString.size();i++)
+        {
+            cout<<GlobalString[i]<<endl;
+            out << GlobalString[i] <<endl;
 
+        }
     }
-}
-return 0;
+    return 0;
 }
 
 int analysisLine(string line)
@@ -124,7 +123,7 @@ int analysisLine(string line)
             if(numericMemory == 0)
                 numericMemory+=1;
             elem->mem_address = to_string(stoi(References[References.size()-1].mem_address,nullptr,10)+numericMemory);
-            cout<<"]]"<<elem->mem_address<<endl;
+        
             numericMemory = CounterUnresolved(arrayLine);
         }
         else
@@ -135,8 +134,6 @@ int analysisLine(string line)
         References.push_back(*elem);
         for(int i = 1;i < arrayLine.size();i++)
         {
-             cout<<"||"<<arrayLine[i]<<endl;
-             cout<<(isVariable(arrayLine[i]))<<endl;
             if(IsCommand(arrayLine[i]))
                 break;
             if((existenceVariable(arrayLine[i])==-1))
@@ -162,7 +159,7 @@ int analysisLine(string line)
     
     if(arrayLine.size() >= 2)
     {   
-        cout<< arrayLine[1] <<endl;    
+           
         Command = analysisCommand(arrayLine[1],arrayLine);
         if(Command!="-1")
             GlobalString.push_back(Command);
@@ -180,6 +177,7 @@ vector<string>stringSplit(string line)
     vector<string> arrayLine1;
     istringstream is(line);
     string buffer;
+
     while(getline(is,buffer,' '))
         arrayLine1.push_back(buffer);
 
@@ -194,18 +192,9 @@ string analysisCommand(string line,vector<string> &lineArray)
     string command;
     string value;
     
-    
-    
-    
-    //cout<<"R2"<<endl;
-    cout<<line<<endl;
-    //cout<<(existenceReferences(lineArray[2])==-1)<<endl;
-    ///cout<<lineArray[2]<<endl;  
-
-    
     if(line == "END")
         {  
-            cout<<"TEST"<<endl;
+            
             cell = to_string(current_step);  
             command = "HALT";
             string value = "0";
@@ -216,29 +205,11 @@ string analysisCommand(string line,vector<string> &lineArray)
                 GlobalString.push_back(compliteString);
                 return "-1";
             }   
-        
-            
-       
         }  
 
     if((!isValue(lineArray[2]) || isVariable(lineArray[2])) && existenceReferences(lineArray[2])==-1)
             return "-1";
-        
-    /*if(existenceVariable(lineArray[2])==-1)
-    {
-                
-            Variable *temp = new Variable;
-            temp->name = lineArray[2];
-            temp->mem_address = cell;
-            temp->value = 0;
-            GlobalVariable.push_back(*temp);
-            operand = lineArray[2];
-            value = "0";
-           
-            
-    }*/
-    
-   
+  
     if(line == "REM")
     {
       return "-1"; 
@@ -250,12 +221,8 @@ string analysisCommand(string line,vector<string> &lineArray)
        
         if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
-            
-            
-            
             command = "READ";
-            value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
-            
+            value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;   
         }
         else
          {
@@ -264,8 +231,6 @@ string analysisCommand(string line,vector<string> &lineArray)
                  command = "READ";
                  value = lineArray[2];
              }
-
-
          }   
         compliteString=cell+" "+command+" "+value;
         current_step++;
@@ -275,13 +240,11 @@ string analysisCommand(string line,vector<string> &lineArray)
         
     else    
     if(line == "PRINT")//--> WRITE
-       {
+    {
         cell = References[existenceReferences(lineArray[0])].mem_address;  
         if(existenceVariable(lineArray[2])!=-1 && existenceReferences(lineArray[0])!=-1)
         {
-            
-            
-            
+
             command = "WRITE";
             value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
         }
@@ -292,37 +255,33 @@ string analysisCommand(string line,vector<string> &lineArray)
                  command = "WRITE";
                  value = lineArray[2];
              }
-
-
          }   
 
         compliteString=cell+" "+command+" "+value;
         current_step++;
    
         return compliteString;    
-       }
+    }
     else
     if(line == "LET")
-        {
+    {
              vector<string> T = lineArray;
+
              while(T[0]!= "LET")
              {
                  T.erase(T.begin());
              }
+
              T.erase(T.begin());
              T = ReverseRecordingCreation(T);
-             for(int z = 0;z<T.size();z++)
-             {
-                 cout<<T[z];
-             }
-             cout<<endl;
-             ResolutionProcess(T,value,command);   
+
+             ResolutionProcess(T,value,command); 
+
             return "-1";
-        }
-                
+    }            
     else  
     if(line == "GOTO")
-        {
+    {
  
             cell = to_string(current_step);
               
@@ -349,16 +308,15 @@ string analysisCommand(string line,vector<string> &lineArray)
                     }    
               
             
-        }
-    else
-            
+     }
+    else        
     if(line == "IF")
         {
             
             command = "LOAD";
             if(existenceVariable(lineArray[2])!=-1)
                 {
-                   cell = References[existenceReferences(lineArray[0])].mem_address;
+                    cell = References[existenceReferences(lineArray[0])].mem_address;
                     value =  GlobalVariable[existenceVariable(lineArray[2])].mem_address;
                     compliteString=cell+" "+command+" "+value;
                     GlobalString.push_back(compliteString);
@@ -374,6 +332,7 @@ string analysisCommand(string line,vector<string> &lineArray)
                     }
                     else
                         return "-1";
+
                     compliteString=cell+" "+command+" "+value;
                     return compliteString; 
                 }
@@ -399,11 +358,12 @@ bool isValue(string value)
 bool isVariable(string value)
 {
     locale loc;
-    //char deg = "-";
+
     if(IsOperation(value))
         return false;
     if(value.size()>4)
         return false;
+
     for(int i = 0;i<value.size();i++)
         {
             
@@ -412,6 +372,7 @@ bool isVariable(string value)
             if(!isdigit(value[i],loc))
                 return false;
         }
+        
     if(isdigit(value[0],loc))
         return true;
      
@@ -471,56 +432,49 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
     if(operation == "-")
     {
     
-    command = "SUB";
-    value =  V2.mem_address;
-    cell = to_string(current_step);
-    compliteString=cell+" "+command+" "+value;
-    GlobalString.push_back(compliteString);
-    current_step++;
+        command = "SUB";
+        value =  V2.mem_address;
+        cell = to_string(current_step);
+        compliteString=cell+" "+command+" "+value;
+        GlobalString.push_back(compliteString);
+        current_step++;
   
     }
     if(operation == "+")
     {
-    command = "ADD";
-    value =  V2.mem_address;
-    cell = to_string(current_step);
-    compliteString=cell+" "+command+" "+value;
-    GlobalString.push_back(compliteString);
-    current_step++;
-    
-    
+        command = "ADD";
+        value =  V2.mem_address;
+        cell = to_string(current_step);
+        compliteString=cell+" "+command+" "+value;
+        GlobalString.push_back(compliteString);
+        current_step++;  
     }
     if(operation == "*")
     {
-    command = "MUL";
-    value =  V2.mem_address;
-    cell = to_string(current_step);
-    compliteString=cell+" "+command+" "+value;
-    GlobalString.push_back(compliteString);
-    current_step++;
+        command = "MUL";
+        value =  V2.mem_address;
+        cell = to_string(current_step);
+        compliteString=cell+" "+command+" "+value;
+        GlobalString.push_back(compliteString);
+        current_step++;
    
     }
     if(operation == "/")
     {
   
-    command = "DIVIDE";
-    value =  V2.mem_address;
-    cell = to_string(current_step);
-    compliteString=cell+" "+command+" "+value;
-    GlobalString.push_back(compliteString);
-    current_step++;
-   
-    
+        command = "DIVIDE";
+        value =  V2.mem_address;
+        cell = to_string(current_step);
+        compliteString=cell+" "+command+" "+value;
+        GlobalString.push_back(compliteString);
+        current_step++;
+
     }
-    
-    if(PriorityOperation == true)
-    {
-        
+
         int buffer = stoi(GlobalVariable[GlobalVariable.size()-1].mem_address,nullptr,10);           
         Variable *temp = new Variable;
         
         cell = to_string(buffer-1);
-        //current_step++;
                    
         temp->mem_address = cell;
                    
@@ -535,9 +489,9 @@ int OperationProcess(string operation,Variable V1,Variable V2,Variable V3,string
         compliteString=cell+" "+command+" "+value;
         GlobalString.push_back(compliteString);
         current_step++;
-        PriorityOperation = true;
+       
         
-    }
+    
     return 0;
 }
 
@@ -563,7 +517,6 @@ vector<string> ReverseRecordingCreation(vector<string> line)
                             
                             for(int m = operation.size()-1;m>=k;m--)
                             {
-                                //cout<<operation[m]<<endl;  
                                 input.push_back(operation[m]);
                                 if(k + 1 < operation.size())
                                     operation.erase(operation.begin() + k+1);
@@ -583,21 +536,11 @@ vector<string> ReverseRecordingCreation(vector<string> line)
                 if(operation.size() > 0)
                     if(OperationPriority(operation[operation.size() - 1]) >= OperationPriority(line[i]) && operation[operation.size() - 1] != "(")
                     {
-                        /*cout<<"COMPLITE"<<endl;
-                        cout<<OperationPriority(operation[operation.size() - 1]) << ">="<<OperationPriority(line[i])<<endl;
-                        cout<<"DO"<<endl;
-                        cout<<"value"<<line[i]<<endl;
-                        for(int i = 0; i < operation.size();i++)
-                                cout<<operation[i];
-                                cout<<endl;*/
+                       
                         input.push_back(operation[operation.size() - 1]);
-                        operation.erase(operation.begin() + (operation.size() - 1));
-                        //cout<<"POSLE"<<endl;
-                        
+                        operation.erase(operation.begin() + (operation.size() - 1));     
                         operation.push_back(line[i]);
-                        /*for(int i = 0; i < operation.size();i++)
-                                cout<<operation[i];
-                                cout<<endl;*/
+                        
                         continue;
                     }
             
@@ -667,15 +610,6 @@ void ResolutionProcess(vector<string> lineA,string &value,string&command)
     }
     
 }
-void SolutionUnresolved()
-{
-    for(int i = 0;i < References.size();i++)
-    {
-        References[i].mem_address = to_string(i);
-        cout<<"]]"<<References[i].mem_address<<endl;
-    }
-    
-}
 void SolutionVariable()
 {
     int cell = SIZE - 1;
@@ -689,8 +623,7 @@ void SolutionVariable()
             compliteString=GlobalVariable[k].mem_address+" "+"="+" "+GlobalVariable[k].name;
             GlobalString.push_back(compliteString);
         }
-        
-        //cout<<GlobalVariable[k].mem_address<<endl;
+
         k++;
     }
     
@@ -700,23 +633,15 @@ int CounterUnresolved(vector<string> line)
     int counter(0);
     for(int i = 0;i < line.size();i++)
     {
-               //cout<<line[i]<<"-> "; 
-              // cout<<IsOperation(line[i]);
-    }
-              //  cout<<endl; 
-    for(int i = 0;i < line.size();i++)
-    {
        
         if(IsOperation(line[i]) && line[i].compare("=") < 0)
         {
-           //cout<<"ZAHOD"<<endl; 
            counter+=3;
            continue;     
         }
         else
         if(IsOperation(line[i]) && line[i].compare("=") == 0)
-        {
-            //cout<<"ZAHOD2"<<endl; 
+        { 
             counter+=2;
             continue;
         }
@@ -725,16 +650,13 @@ int CounterUnresolved(vector<string> line)
             counter+=2;
             continue;
         }
-
-       
     }
-    cout<<"C: "<<counter<<endl;
     return counter;
 }
 bool IsCommand(string line)
 {
- if(line == "IF" || line == "GOTO" || line == "REM" || line == "END" || line == "INPUT" || line == "WRITE" || line == "PRINT")
-    return true;
- else   
- return false;   
+    if(line == "IF" || line == "GOTO" || line == "REM" || line == "END" || line == "INPUT" || line == "WRITE" || line == "PRINT")
+        return true;
+    else   
+        return false;   
 }

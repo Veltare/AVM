@@ -6,31 +6,33 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
+
 #include "../../MySimpleComputer/LAB1/MySimpleComputer.h"
 #include "ASM.h"
 
 main(int argc, char* argv[])
 {
 
-ifstream fin;
-ofstream out;
-int temp;
-string line;
+    ifstream fin;
+    ofstream out;
+    string line;
 
 if(argc !=3)
     {
         cerr<<"Ошибка!Неверное количество аргументов!"<<endl;
         exit(1);
     }
-if ((strcmp(argv[1], ".sa") == 0) && (strcmp(argv[2], ".o") == 0))
+if((strcmp(argv[1], ".sa") == 0) && (strcmp(argv[2], ".o") == 0))
 		{
             cout<<argv[1]<<endl;
             cout<<argv[2]<<endl;
             cerr<<"Ошибка!Неверный название или путь к файлам!"<<endl;
             exit(1);
         }  
+
 fin.open(argv[1],ifstream::in);
 out.open(argv[2],ofstream::binary);
+
 if(fin.good())
 {
     
@@ -76,12 +78,10 @@ int analysisLine(string line)
             return -1;    
          
         Comment = analysisComment(arrayLine,SymbolComment);
-        //cout<<command<<"-"<<argument<<endl;
+       
         if(sc_commandEncode(command,argument,&code))
         {
-            //cout<<code<<endl;
-            sc_memorySet(cell,code);
-             //MemoryArray[cell] = code;
+            sc_memorySet(cell,code); 
         }
        
     }   
@@ -98,13 +98,10 @@ vector<string>stringSplit(string line)
     while(getline(is,buffer,' '))
         arrayLine.push_back(buffer);
 
-     
-    
  return arrayLine;
 }
 int analysisCommand(string line,int &command)
 {
-    
     if(line == "READ")
         command = 0x0A;
     else    
@@ -155,8 +152,7 @@ string analysisComment(vector<string> arrayLine,string SymbolComment)
 {
     string Comment;
     for(int i = 0;i<arrayLine.size();i++)
-    {
-              
+    {    
             if(arrayLine[i] == SymbolComment)
             {
                 
@@ -172,13 +168,10 @@ string analysisComment(vector<string> arrayLine,string SymbolComment)
 }
 int analysisOperation(vector<string> arrayLine)
 {
-   
     for(int i = 0;i<arrayLine.size();i++)
     {
-        
             if(arrayLine[i] == "=" && i+1 < arrayLine.size())
             {
-              
                string temp = arrayLine[i+1];
                
                if(temp[0]=='+')
@@ -186,10 +179,8 @@ int analysisOperation(vector<string> arrayLine)
                   
                    arrayLine[i+1].erase(0,1);
                } 
-
                sc_memorySet(stoi( arrayLine[i-1],nullptr,10),stoi( arrayLine[i+1],nullptr,10));
                return 0;
-                
             }
     }    
     return -1;

@@ -1,6 +1,6 @@
 10 INPUT A
 20 LET B = A
-30 LET C = -1 * ( A - 1 ) 
+30 LET C = -1 * ( A - 2 ) 
 40 LET B = B * ( A - 1 )
 50 LET A = A - 1
 60 LET C = C + 1

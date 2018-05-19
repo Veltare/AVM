@@ -16,10 +16,6 @@
 
 using namespace std;
 
-ios_base::fmtflags oldFlags = cout.flags();
-    streamsize         oldPrec  = cout.precision();
-    char               oldFill  = cout.fill();
-
 struct itimerval nval, oval;
 
 void PrintMemory(int z,int k,bool enter_mode);
@@ -32,15 +28,15 @@ void Timer();
 void IOT(int *value,int command,int operand);
 void PrintC(int value);
 void CU();
-int ALU(int command,int operand);
 void PrintCell(int value);
+
+int ALU(int command,int operand);
+
 
 int IncCounter(0);
 int Accumulator(0);
 int Operation(0);
 int x(2),y(2);
-
-
 
 bool CounterMode(false);
 void signalhandler(int sign)
@@ -63,20 +59,18 @@ void signalhandler(int sign)
             sc_regSet(M,1);
 
         }
-        
-       // alarm(0);
     }
 }
 int main()
 {
 
     signal(SIGALRM,signalhandler);
-   // signal(SIGUSR1,Reset);
-    nval.it_interval.tv_sec  = 1;
-    nval.it_interval.tv_usec = 0;
+
+    nval.it_interval.tv_sec  = 0;
+    nval.it_interval.tv_usec = 5;
     nval.it_value.tv_sec  = 1;
     nval.it_value.tv_usec = 0;	
-    //sc_memoryInit();
+
     mt_clrscr();
     PrintMemory(2,2,false);
     PrintInterface();
@@ -203,7 +197,7 @@ void PrintBigNumber(int value,int x,int y,enum colors fg,enum colors bg)
     mt_setbgcolor(DEFAULT);
     int count;
 
-        bc_bigcharread(10,array,1,&count);
+        bc_bigcharread((char*)"PLUS",array,1,&count);
         bc_printbigchar(array,x,y,fg,bg);
         
         sc_commandDecode(value,&command,&operand);
@@ -211,24 +205,24 @@ void PrintBigNumber(int value,int x,int y,enum colors fg,enum colors bg)
         {
              if(operand < 15)
              {
-                    bc_bigcharread((char*)"NUM2",array,(int)command/16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command/16,&count);
                     bc_printbigchar(array,x+9,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)command%16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command%16,&count);
                     bc_printbigchar(array,x+18,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)0,&count);
                     bc_printbigchar(array,x+27,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand,&count);
                     bc_printbigchar(array,x+36,y,fg,bg);
              }
              else
              {
-                    bc_bigcharread((char*)"NUM2",array,(int)command/16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command/16,&count);
                     bc_printbigchar(array,x+9,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)command%16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command%16,&count);
                     bc_printbigchar(array,x+18,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand/16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand/16,&count);
                     bc_printbigchar(array,x+27,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand%16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand%16,&count);
                     bc_printbigchar(array,x+36,y,fg,bg);
              }
        
@@ -237,24 +231,24 @@ void PrintBigNumber(int value,int x,int y,enum colors fg,enum colors bg)
         {
             if(operand < 15)
              {
-                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)0,&count);
                     bc_printbigchar(array,x+9,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)command,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command,&count);
                     bc_printbigchar(array,x+18,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)0,&count);
                     bc_printbigchar(array,x+27,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand,&count);
                     bc_printbigchar(array,x+36,y,fg,bg);
              }
              else
              {
-                    bc_bigcharread((char*)"NUM2",array,(int)0,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)0,&count);
                     bc_printbigchar(array,x+9,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)command,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)command,&count);
                     bc_printbigchar(array,x+18,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand/16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand/16,&count);
                     bc_printbigchar(array,x+27,y,fg,bg);
-                    bc_bigcharread((char*)"NUM2",array,(int)operand%16,&count);
+                    bc_bigcharread((char*)"NUM",array,(int)operand%16,&count);
                     bc_printbigchar(array,x+36,y,fg,bg);
              }
        
@@ -585,9 +579,9 @@ void PrintC(int value)
                     buffer = (value/100)%10;
                     cout<<(int)(-1)*buffer;
                     buffer = (value%100)/10;
-                    cout<<(int)(-1)*buffer;
+                    cout<<(int)buffer;
                     buffer = (value%10);
-                    cout<<(int)(-1)*buffer;
+                    cout<<(int)buffer;
                 }
                 else
                 {
@@ -619,7 +613,7 @@ void PrintCell(int value)
     {
          if(operand > 0x0F)
             cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(2)<<command<<setw(1)<<operand; 
-        else
+         else
             cout<<uppercase<<right<<"+"<<hex<<setfill('0') << setw(2)<<command<<setw(2)<<operand;    
     }
            
